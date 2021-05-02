@@ -9,18 +9,41 @@ def test_function(company_name):
     df = yf.download(f'{company_name.upper()}.BO', period='1d', progress=False)
     return df
 
-# ticker = yf.Ticker('RELIANCE.BO')
+
+async def hourly_updates(company_name='WIPRO'):
+    ticker = yf.Ticker(f'{company_name}.BO')
+    df = ticker.history(period="1h", interval='1m')
+    # df = yf.download(f'{company_name.upper()}.BO',
+    #                  period='1h', interval='1m', progress=False,)
+    # Reseting the index
+    df = df.reset_index()
+    # Converting the datatype to float
+    for i in ['Open', 'High', 'Close', 'Low']:
+        df[i] = df[i].astype('float64')
+    fig = px.line(df, x='Datetime', y='High',
+                  title=f'{company_name} Share Prices in the last hour')
+    fig.write_image(f"images/{company_name}.png")
+
+
+async def hourly_nifty():
+    ticker = yf.Ticker('^NSEI')
+    df = ticker.history(period="1h", interval='1m')
+    # Reseting the index
+    df = df.reset_index()
+    # Converting the datatype to float
+    for i in ['Open', 'High', 'Close', 'Low']:
+        df[i] = df[i].astype('float64')
+    fig = px.line(df, x='Datetime', y='High',
+                  title='Nifty 50 over the last hour')
+    fig.write_image("images/nifty.png")
+
+
+
 
 # tsla_df = ticker.history(period="1d")
 
 # print(tsla_df)
-# # Reseting the index
-# tsla_df = tsla_df.reset_index()
-# # Converting the datatype to float
-# for i in ['Open', 'High', 'Close', 'Low']:
-#     tsla_df[i] = tsla_df[i].astype('float64')
 
-# print(tsla_df['Close'][0])
 
 # tsla_df['Close'].plot(title="TSLA's stock price")
 
