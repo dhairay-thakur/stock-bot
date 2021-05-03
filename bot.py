@@ -27,7 +27,7 @@ async def on_ready():
     scheduler.add_job(update_hour_nifty, CronTrigger(
         day_of_week="0-4", hour="10-15", minute="30"))
 
-    #Scheduled for daily nifty update at 15:35
+    # Scheduled for daily nifty update at 15:35
     scheduler.add_job(update_daily_nifty, CronTrigger(
         day_of_week="0-4", hour="15", minute="35"))
 
@@ -39,7 +39,7 @@ async def on_member_join(member):
     await message.channel.send(f'Hi {member.name}, welcome to my Discord server!')
 
 
-@bot.command(name='eod', help='END OF DAY DATA FOR REQUESTED COMPANY')
+@bot.command(name='eod', help='END OF DAY DATA FOR REQUESTED COMPANY (Name)- https://in.finance.yahoo.com/')
 async def update(ctx, company_name='RELIANCE.BO'):
     data = App.update_daily_company(company_name)
     response = f'{company_name.upper()} EOD Data -\n - '
@@ -48,8 +48,8 @@ async def update(ctx, company_name='RELIANCE.BO'):
     await ctx.send(response)
 
 
-@bot.command(name='price', help='UPDATES OF THE REQUESTED COMPANY')
-async def update_hour(ctx, company_name='^NSEI', duration='1h'):
+@bot.command(name='price', help='PRICE VARIATION OF THE REQUESTED COMPANY (Name,Duration)- https://in.finance.yahoo.com/')
+async def update_hour(ctx, company_name='RELIANCE', duration='1y'):
     await App.hourly_updates(company_name, duration)
     with open(f'images/{company_name}.png', "rb") as fh:
         f = discord.File(fh, filename=f'images/{company_name}.png')

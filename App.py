@@ -10,7 +10,7 @@ def update_daily_company(company_name):
     return df
 
 
-async def hourly_updates(company_name='WIPRO', duration='1h'):
+async def hourly_updates(company_name='RELIANCE', duration='1y'):
     ticker = yf.Ticker(f'{company_name}.BO')
     interval = '1d'
     x_name = 'Date'
@@ -24,7 +24,7 @@ async def hourly_updates(company_name='WIPRO', duration='1h'):
     for i in ['Open', 'High', 'Close', 'Low']:
         df[i] = df[i].astype('float64')
     fig = px.line(df, x=x_name, y='High',
-                  title=f'{company_name} Share Prices over last {duration}')
+                  title=f'{company_name.upper()} Share Prices over last {duration}')
     fig.write_image(f"images/{company_name}.png")
 
 
