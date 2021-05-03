@@ -3,7 +3,9 @@ import time
 import discord
 import asyncio
 from dotenv import load_dotenv
-from discord.ext import commands, tasks
+from discord.ext import commands
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 import App
 
 load_dotenv()
@@ -19,6 +21,17 @@ async def on_ready():
     print(
         f'{bot.user.name} is connected successfully!'
     )
+    scheduler = AsyncIOScheduler()
+
+    # Scheduled for hourly nifty updates from 10:30 - 14:30
+    scheduler.add_job(update_hour_nifty, CronTrigger(
+        day_of_week="0-4", hour="10-15", minute="30"))
+
+    #Scheduled for daily nifty update at 15:35
+    scheduler.add_job(update_daily_nifty, CronTrigger(
+        day_of_week="0-4", hour="15", minute="35"))
+
+    scheduler.start()
 
 
 @bot.event
@@ -28,35 +41,36 @@ async def on_member_join(member):
 
 @bot.command(name='eod', help='END OF DAY DATA FOR REQUESTED COMPANY')
 async def update(ctx, company_name='RELIANCE.BO'):
-    data = App.test_function(company_name)
+    data = App.update_daily_company(company_name)
     response = f'{company_name.upper()} EOD Data -\n - '
     response += '\n - '.join(
         [f'{field}: {round(data[field][0],2)}' for field in data])
     await ctx.send(response)
 
 
-@bot.command(name='hour', help='HOURLY UPDATES OF THE REQUESTED COMPANY')
-async def update_hour(ctx, company_name='^NSEI'):
-    await App.hourly_updates(company_name)
+@bot.command(name='price', help='UPDATES OF THE REQUESTED COMPANY')
+async def update_hour(ctx, company_name='^NSEI', duration='1h'):
+    await App.hourly_updates(company_name, duration)
     with open(f'images/{company_name}.png', "rb") as fh:
         f = discord.File(fh, filename=f'images/{company_name}.png')
     await ctx.send(file=f)
 
 
-@tasks.loop(seconds=3)
 async def update_hour_nifty():
     await App.hourly_nifty()
     with open('images/nifty.png', "rb") as fh:
         f = discord.File(fh, filename='images/nifty.png')
     channel = bot.get_channel(838120561993056290)
-    print(channel)
     await channel.send(file=f)
 
 
-@update_hour_nifty.before_loop
-async def before():
-    await bot.wait_until_ready()
+async def update_daily_nifty():
+    result = await App.daily_nifty()
+    with open('images/nifty.png', "rb") as fh:
+        f = discord.File(fh, filename='images/nifty.png')
+    channel = bot.get_channel(838120561993056290)
+    await channel.send(file=f)
+    await channel.send(f'Nifty 50 \n -Open = {result[0]} \n -Close={result[1]} \n -Change={round(result[1] - result[0],2)}')
 
-update_hour_nifty.start()
 
 bot.run(TOKEN)
